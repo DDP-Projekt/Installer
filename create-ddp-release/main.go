@@ -5,6 +5,7 @@ import (
 	"archive/zip"
 	"compress/gzip"
 	"io"
+	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -34,6 +35,7 @@ func main() {
 }
 
 func compressFolder(from, to string) error {
+	log.Printf("compressing %s to %s", from, to)
 	// create the .zip/.tar file
 	f, err := os.Create(to)
 	if err != nil {
@@ -89,7 +91,7 @@ func compressFolder(from, to string) error {
 			return err
 		})
 	} else if runtime.GOOS == "linux" {
-		// tar > gzip > buf
+		// tar > gzip > file
 		zr := gzip.NewWriter(f)
 		tw := tar.NewWriter(zr)
 
@@ -101,7 +103,10 @@ func compressFolder(from, to string) error {
 				return err
 			}
 
-			header.Name = filepath.ToSlash(file)
+			header.Name, err = filepath.Rel(filepath.Dir(from), file)
+			if err != nil {
+				return err
+			}
 
 			// write header
 			if err := tw.WriteHeader(header); err != nil {
