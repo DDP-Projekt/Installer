@@ -2,7 +2,10 @@ module github.com/DDP-Projekt/Installer
 
 go 1.19
 
-require github.com/spf13/viper v1.13.0
+require (
+	github.com/otiai10/copy v1.7.0
+	github.com/spf13/viper v1.13.0
+)
 
 require (
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
