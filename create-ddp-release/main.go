@@ -8,7 +8,10 @@ It consumes a config.json file which should look like this:
 		"Kompilierer": "<Directory to the Kompilierer repo>",
 		"vscode-ddp": "<Directory to the vscode-ddp repo>",
 		"DDPLS": "<Directory to the DDPLS repo>"
+		"mingw": "<Directory to the mingw64 installation that should be shiped>"
 	}
+
+In the Kompilierer-repo, $make should have already been executed
 */
 package main
 
@@ -54,19 +57,27 @@ func main() {
 	errPanic(os.RemoveAll(outDir))
 	errPanic(os.RemoveAll(outDir + compressExt))
 
+	// read the json file
 	compDir := filepath.Join(viper.GetString("Kompilierer"), "build", "DDP")
 	extDir := viper.GetString("vscode-ddp")
 	lsDir := viper.GetString("DDPLS")
+	mingwDir := viper.GetString("mingw")
 	cwd, err := os.Getwd() // current working directory
 	errPanic(err)
 
 	// copy kddp
 	errPanic(cp.Copy(compDir, outDir))
 	// copy the extension output (.vsix file)
-	runCmd(extDir, "vsce", "package", "-o", filepath.Join(cwd, outDir))
+	errPanic(os.Mkdir(filepath.Join(outDir, "vscode-ddp"), os.ModePerm))
+	runCmd(extDir, "vsce", "package", "-o", filepath.Join(cwd, outDir, "vscode-ddp"))
 	// build the language server into the output directory
 	runCmd(lsDir, "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
-	// compress teh output directory
+	if runtime.GOOS == "windows" {
+		// compress mingw and put it into the output directory
+		errPanic(os.Mkdir(filepath.Join(outDir, "gcc"), os.ModePerm))
+		errPanic(compressFolder(mingwDir, filepath.Join(outDir, "gcc", "mingw64"+compressExt)))
+	}
+	// compress the output directory
 	errPanic(compressFolder(outDir, outDir+compressExt))
 }
 
