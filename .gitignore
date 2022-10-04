@@ -2,3 +2,4 @@
 *.zip
 *.tar.gz
 /create-ddp-release/DDP
+*.exe
