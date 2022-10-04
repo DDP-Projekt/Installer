@@ -18,7 +18,7 @@ func InfoF(format string, args ...any) {
 }
 
 func DoneF(format string, args ...any) {
-	fmt.Printf(ColorString("[\u2713] "+format+"\n", Green), args...)
+	fmt.Printf(ColorString("[\u221A] "+format+"\n", Green), args...)
 }
 
 func WarnF(format string, args ...any) {
