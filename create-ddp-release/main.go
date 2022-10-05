@@ -72,6 +72,8 @@ func main() {
 		// compress mingw and put it into the output directory
 		errPanic(compression.CompressFolder(mingwDir, filepath.Join(outDir, "mingw64"+compressExt)))
 	}
+	// build the installer
+	runCmd("../ddp-setup/", "go", "build", "-o", filepath.Join(cwd, outDir), ".")
 	// compress the output directory
 	errPanic(compression.CompressFolder(outDir, outDir+compressExt))
 }
