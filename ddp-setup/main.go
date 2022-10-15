@@ -14,9 +14,10 @@ import (
 )
 
 var (
-	gccCmd  = "gcc"
-	makeCmd = "make"
-	arCmd   = "ar"
+	gccCmd    = "gcc"
+	makeCmd   = "make"
+	arCmd     = "ar"
+	vscodeCmd = "code"
 )
 
 func main() {
@@ -74,6 +75,17 @@ func main() {
 		recompileLibs()
 	}
 
+	hasVscode := false
+	if vscodeCmd, hasVscode = LookupCommand(vscodeCmd); hasVscode {
+		InfoF("installing vscode-ddp as vscode extension")
+		vsixPath := findVSIXFile()
+		if vsixPath == "" {
+			WarnF("No .vsix file found, aborting installation of vscode-ddp")
+		} else {
+			runCmd("", vscodeCmd, "--install-extension", vsixPath)
+		}
+	}
+
 	InfoF("Press ENTER to exit...")
 	fmt.Scanln()
 }
@@ -89,7 +101,7 @@ func isSameGccVersion() bool {
 		return false
 	}
 	gccVersionLine := strings.Split(kddpVersionOutput, "\n")[2]
-	kddpGccVersion := strings.Split(gccVersionLine, " ")[2]
+	kddpGccVersion := strings.Trim(strings.Split(gccVersionLine, " ")[2], "\n")
 	match := gccVersion == kddpGccVersion
 	if !match {
 		InfoF("local gcc version, and kddp gcc version mismatch (%s vs %s)", gccVersion, kddpGccVersion)
@@ -243,6 +255,21 @@ func Map[T any](s []T, mapFunc func(t T) T) []T {
 	result := make([]T, 0, len(s))
 	for _, v := range s {
 		result = append(result, mapFunc(v))
+	}
+	return result
+}
+
+func findVSIXFile() (result string) {
+	if err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if filepath.Ext(d.Name()) == ".vsix" {
+			result = path
+		}
+		return nil
+	}); err != nil {
+		ErrorF("Error searching for .vsix file: %s", err)
 	}
 	return result
 }
