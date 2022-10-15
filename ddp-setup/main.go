@@ -75,14 +75,18 @@ func main() {
 		recompileLibs()
 	}
 
-	hasVscode := false
-	if vscodeCmd, hasVscode = LookupCommand(vscodeCmd); hasVscode {
-		InfoF("installing vscode-ddp as vscode extension")
-		vsixPath := findVSIXFile()
-		if vsixPath == "" {
-			WarnF("No .vsix file found, aborting installation of vscode-ddp")
-		} else {
-			runCmd("", vscodeCmd, "--install-extension", vsixPath)
+	if prompt("Do you want to install vscode-ddp (the DDP vscode extension)") {
+		hasVscode := false
+		if vscodeCmd, hasVscode = LookupCommand(vscodeCmd); hasVscode {
+			InfoF("installing vscode-ddp as vscode extension")
+			vsixPath := findVSIXFile()
+			if vsixPath == "" {
+				WarnF("No .vsix file found, aborting installation of vscode-ddp")
+			} else {
+				if _, err := runCmd("", vscodeCmd, "--install-extension", vsixPath); err == nil {
+					DoneF("Installed vscode-ddp")
+				}
+			}
 		}
 	}
 
