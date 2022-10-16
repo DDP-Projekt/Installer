@@ -11,7 +11,7 @@ const (
 	Red    = "\033[31m"
 	Green  = "\033[32m"
 	Yellow = "\033[33m"
-	Blue   = "\033[34m"
+	Cyan   = "\033[36m"
 )
 
 func InfoF(format string, args ...any) {
@@ -26,7 +26,10 @@ func WarnF(format string, args ...any) {
 	fmt.Printf(ColorString("[!] "+format+"\n", Yellow), args...)
 }
 
+var errored = false
+
 func ErrorF(format string, args ...any) {
+	errored = true
 	fmt.Printf(ColorString("[X] "+format+"\n", Red), args...)
 }
 

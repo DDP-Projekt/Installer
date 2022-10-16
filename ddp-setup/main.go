@@ -10,6 +10,8 @@ import (
 	"strings"
 
 	"github.com/DDP-Projekt/Installer/compression"
+	"github.com/badgerodon/penv"
+	"github.com/kardianos/osext"
 	cp "github.com/otiai10/copy"
 )
 
@@ -85,6 +87,32 @@ func main() {
 		}
 	}
 
+	if prompt("Do you want to set the DDPPATH environment variable") {
+		if exedir, err := osext.ExecutableFolder(); err != nil {
+			WarnF("Could not retreive executable path")
+		} else {
+			InfoF("Setting the environment variable DDPPATH to %s", exedir)
+			if err := penv.SetEnv("DDPPATH", exedir); err != nil {
+				ErrorF("Error setting DDPPATH: %s", err)
+			}
+		}
+	}
+
+	if prompt("Do you want to add the DDP/bin directory to your PATH") {
+		if exedir, err := osext.ExecutableFolder(); err != nil {
+			WarnF("Could not retreive executable path")
+		} else {
+			binPath := filepath.Join(exedir, "bin")
+			InfoF("Setting the environment variable DDPPATH to %s", exedir)
+			if err := penv.AppendEnv("PATH", binPath); err != nil {
+				ErrorF("Error setting DDPPATH: %s", err)
+			}
+		}
+	}
+
+	if !errored {
+		DoneF("The ddp-setup finished successfully")
+	}
 	InfoF("Press ENTER to exit...")
 	fmt.Scanln()
 }
@@ -216,6 +244,7 @@ func runCmd(dir string, name string, args ...string) (string, error) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
 	cmdStr := cmd.String()
+	InfoF(cmdStr)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		ErrorF("'%s' failed (%s) output: %s", cmdStr, err, out)
