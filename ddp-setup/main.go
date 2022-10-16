@@ -99,13 +99,13 @@ func isSameGccVersion() bool {
 	if err != nil {
 		return false
 	}
-	gccVersion = strings.Trim(gccVersion, "\n") // TODO: this
+	gccVersion = strings.Trim(gccVersion, "\r\n") // TODO: this
 	kddpVersionOutput, err := runCmd("", filepath.Join("bin", "kddp"), "version")
 	if err != nil {
 		return false
 	}
 	gccVersionLine := strings.Split(kddpVersionOutput, "\n")[2]
-	kddpGccVersion := strings.Trim(strings.Split(gccVersionLine, " ")[2], "\n")
+	kddpGccVersion := strings.Trim(strings.Split(gccVersionLine, " ")[2], "\r\n")
 	match := gccVersion == kddpGccVersion
 	if !match {
 		InfoF("local gcc version, and kddp gcc version mismatch (%s vs %s)", gccVersion, kddpGccVersion)
