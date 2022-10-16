@@ -79,13 +79,8 @@ func main() {
 		hasVscode := false
 		if vscodeCmd, hasVscode = LookupCommand(vscodeCmd); hasVscode {
 			InfoF("installing vscode-ddp as vscode extension")
-			vsixPath := findVSIXFile()
-			if vsixPath == "" {
-				WarnF("No .vsix file found, aborting installation of vscode-ddp")
-			} else {
-				if _, err := runCmd("", vscodeCmd, "--install-extension", vsixPath); err == nil {
-					DoneF("Installed vscode-ddp")
-				}
+			if _, err := runCmd("", vscodeCmd, "--install-extension", "vscode-ddp.vsix"); err == nil {
+				DoneF("Installed vscode-ddp")
 			}
 		}
 	}
@@ -259,21 +254,6 @@ func Map[T any](s []T, mapFunc func(t T) T) []T {
 	result := make([]T, 0, len(s))
 	for _, v := range s {
 		result = append(result, mapFunc(v))
-	}
-	return result
-}
-
-func findVSIXFile() (result string) {
-	if err := filepath.WalkDir(".", func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		if filepath.Ext(d.Name()) == ".vsix" {
-			result = path
-		}
-		return nil
-	}); err != nil {
-		ErrorF("Error searching for .vsix file: %s", err)
 	}
 	return result
 }
