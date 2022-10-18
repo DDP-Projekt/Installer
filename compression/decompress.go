@@ -13,6 +13,10 @@ import (
 )
 
 func DecompressFolder(from, to string) error {
+	if err := os.MkdirAll(to, 0755); err != nil {
+		return err
+	}
+
 	if runtime.GOOS == "windows" {
 		r, err := zip.OpenReader(from)
 		if err != nil {
@@ -23,8 +27,6 @@ func DecompressFolder(from, to string) error {
 				panic(err)
 			}
 		}()
-
-		os.MkdirAll(to, 0755)
 
 		// Closure to address file descriptors issue with all the deferred .Close() methods
 		extractAndWriteFile := func(f *zip.File) error {
@@ -93,13 +95,13 @@ func DecompressFolder(from, to string) error {
 				return err
 			}
 
+			path := filepath.Join(to, header.Name)
+
 			switch header.Typeflag {
 			case tar.TypeDir:
-				if err := os.Mkdir(header.Name, 0755); err != nil {
-					return err
-				}
+				os.MkdirAll(path, 0755)
 			case tar.TypeReg:
-				outFile, err := os.Create(header.Name)
+				outFile, err := os.Create(path)
 				if err != nil {
 					return err
 				}
