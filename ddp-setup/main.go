@@ -10,13 +10,16 @@ import (
 	"strings"
 
 	"github.com/DDP-Projekt/Installer/compression"
+	"github.com/badgerodon/penv"
+	"github.com/kardianos/osext"
 	cp "github.com/otiai10/copy"
 )
 
 var (
-	gccCmd  = "gcc"
-	makeCmd = "make"
-	arCmd   = "ar"
+	gccCmd    = "gcc"
+	makeCmd   = "make"
+	arCmd     = "ar"
+	vscodeCmd = "code"
 )
 
 func main() {
@@ -74,6 +77,42 @@ func main() {
 		recompileLibs()
 	}
 
+	if prompt("Do you want to install vscode-ddp (the DDP vscode extension)") {
+		hasVscode := false
+		if vscodeCmd, hasVscode = LookupCommand(vscodeCmd); hasVscode {
+			InfoF("installing vscode-ddp as vscode extension")
+			if _, err := runCmd("", vscodeCmd, "--install-extension", "vscode-ddp.vsix"); err == nil {
+				DoneF("Installed vscode-ddp")
+			}
+		}
+	}
+
+	if prompt("Do you want to set the DDPPATH environment variable") {
+		if exedir, err := osext.ExecutableFolder(); err != nil {
+			WarnF("Could not retreive executable path")
+		} else {
+			InfoF("Setting the environment variable DDPPATH to %s", exedir)
+			if err := penv.SetEnv("DDPPATH", exedir); err != nil {
+				ErrorF("Error setting DDPPATH: %s", err)
+			}
+		}
+	}
+
+	if prompt("Do you want to add the DDP/bin directory to your PATH") {
+		if exedir, err := osext.ExecutableFolder(); err != nil {
+			WarnF("Could not retreive executable path")
+		} else {
+			binPath := filepath.Join(exedir, "bin")
+			InfoF("Setting the environment variable DDPPATH to %s", exedir)
+			if err := penv.AppendEnv("PATH", binPath); err != nil {
+				ErrorF("Error setting DDPPATH: %s", err)
+			}
+		}
+	}
+
+	if !errored {
+		DoneF("The ddp-setup finished successfully")
+	}
 	InfoF("Press ENTER to exit...")
 	fmt.Scanln()
 }
@@ -83,13 +122,13 @@ func isSameGccVersion() bool {
 	if err != nil {
 		return false
 	}
-	gccVersion = strings.Trim(gccVersion, "\n") // TODO: this
+	gccVersion = strings.Trim(gccVersion, "\r\n") // TODO: this
 	kddpVersionOutput, err := runCmd("", filepath.Join("bin", "kddp"), "version")
 	if err != nil {
 		return false
 	}
 	gccVersionLine := strings.Split(kddpVersionOutput, "\n")[2]
-	kddpGccVersion := strings.Split(gccVersionLine, " ")[2]
+	kddpGccVersion := strings.Trim(strings.Split(gccVersionLine, " ")[2], "\r\n")
 	match := gccVersion == kddpGccVersion
 	if !match {
 		InfoF("local gcc version, and kddp gcc version mismatch (%s vs %s)", gccVersion, kddpGccVersion)
@@ -205,6 +244,7 @@ func runCmd(dir string, name string, args ...string) (string, error) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
 	cmdStr := cmd.String()
+	InfoF(cmdStr)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		ErrorF("'%s' failed (%s) output: %s", cmdStr, err, out)

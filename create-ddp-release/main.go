@@ -65,7 +65,7 @@ func main() {
 	// copy kddp
 	errPanic(cp.Copy(compDir, outDir))
 	// copy the extension output (.vsix file)
-	runCmd(extDir, "vsce", "package", "-o", filepath.Join(cwd, outDir))
+	runCmd(extDir, "vsce", "package", "-o", filepath.Join(cwd, outDir, "vscode-ddp.vsix"))
 	// build the language server into the output directory
 	runCmd(lsDir, "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 	if runtime.GOOS == "windows" {
