@@ -70,12 +70,12 @@ func main() {
 	runCmd(lsDir, "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 	if runtime.GOOS == "windows" {
 		// compress mingw and put it into the output directory
-		errPanic(compression.CompressFolder(mingwDir, filepath.Join(outDir, "mingw64"+compressExt)))
+		errPanic(compression.CompressFolder(filepath.Clean(mingwDir), filepath.Join(outDir, "mingw64"+compressExt)))
 	}
 	// build the installer
 	runCmd("../ddp-setup/", "go", "build", "-o", filepath.Join(cwd, outDir), ".")
 	// compress the output directory
-	errPanic(compression.CompressFolder(outDir, outDir+compressExt))
+	errPanic(compression.CompressFolder(filepath.Clean(outDir), filepath.Clean(outDir+compressExt)))
 }
 
 func runCmd(dir, name string, args ...string) {

@@ -39,7 +39,7 @@ func CompressFolder(from, to string) error {
 			header.Method = zip.Deflate
 
 			// set relative path of a file as the header name
-			header.Name = strings.TrimPrefix(path, from)
+			header.Name = filepath.Join(filepath.Base(from), strings.TrimPrefix(path, from))
 			if info.IsDir() {
 				header.Name += "/"
 			}
@@ -76,7 +76,7 @@ func CompressFolder(from, to string) error {
 				return err
 			}
 
-			header.Name = strings.TrimPrefix(file, from)
+			header.Name = filepath.Join(filepath.Base(from), strings.TrimPrefix(file, from))
 
 			// write header
 			if err := tw.WriteHeader(header); err != nil {

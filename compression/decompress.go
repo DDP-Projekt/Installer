@@ -40,10 +40,10 @@ func DecompressFolder(from, to string) error {
 				}
 			}()
 
-			path := filepath.Join(to, f.Name)
+			path := filepath.Clean(f.Name)
 
 			// Check for ZipSlip (Directory traversal)
-			if !strings.HasPrefix(path, filepath.Clean(to)+string(os.PathSeparator)) {
+			if !strings.HasPrefix(path, filepath.Clean(to)) {
 				return fmt.Errorf("illegal file path: %s", path)
 			}
 
