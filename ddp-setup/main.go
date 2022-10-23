@@ -22,7 +22,17 @@ var (
 	vscodeCmd = "code"
 )
 
+func exit(code int) {
+	InfoF("Press ENTER to exit...")
+	fmt.Scanln()
+	os.Exit(code)
+}
+
 func main() {
+	if !prompt("Welcome to the DDP Installer!\nThis setup will simply unpack some files and ask you for permission to change some environment variables and such.\nDo you want to continue") {
+		return
+	}
+
 	_, hasGcc := LookupCommand("gcc")
 
 	if !hasGcc && runtime.GOOS == "windows" {
@@ -31,8 +41,9 @@ func main() {
 		if err != nil {
 			ErrorF("Error while unzipping mingw64: %s", err)
 			ErrorF("no gcc available, aborting")
-			os.Exit(1)
+			exit(1)
 		}
+		DoneF("unzipped mingw64")
 
 		gccCmd, err = filepath.Abs(filepath.Join("mingw64", "bin", "gcc"))
 		if err != nil {
@@ -50,10 +61,23 @@ func main() {
 		}
 		makeCmd = filepath.ToSlash(makeCmd)
 
+		if prompt("For kddp to work, mingw64 needs to be added to your PATH. Do you agree") {
+			if mingw64binDir, err := filepath.Abs(filepath.Join("mingw64", "bin")); err != nil {
+				WarnF("error getting absolute Path: %s", err)
+			} else {
+				InfoF("Appending %s to the PATH", mingw64binDir)
+				if err := penv.AppendEnv("PATH", mingw64binDir); err != nil {
+					ErrorF("Error appending to PATH: %s", err)
+				}
+			}
+		} else {
+			WarnF("mingw64 was not added to the PATH, kddp will probably not work!")
+		}
+
 		DoneF("using unzipped mingw64 for gcc, ar and make")
 	} else if !hasGcc && runtime.GOOS != "windows" {
 		ErrorF("gcc not found, aborting")
-		os.Exit(1)
+		exit(1)
 	}
 
 	if makeCmd == "make" { // if we don't use the zipped mingw32-make
@@ -64,7 +88,7 @@ func main() {
 			makeCmd, hasMake = LookupCommand("mingw32-make")
 			if !hasMake {
 				ErrorF("mingw32-make not found, aborting")
-				os.Exit(1)
+				exit(1)
 			}
 			makeCmd = filepath.ToSlash(makeCmd)
 		}
@@ -103,9 +127,9 @@ func main() {
 			WarnF("Could not retreive executable path")
 		} else {
 			binPath := filepath.Join(exedir, "bin")
-			InfoF("Setting the environment variable DDPPATH to %s", exedir)
+			InfoF("Appending %s to the PATH", binPath)
 			if err := penv.AppendEnv("PATH", binPath); err != nil {
-				ErrorF("Error setting DDPPATH: %s", err)
+				ErrorF("Error appending to PATH: %s", err)
 			}
 		}
 	}
@@ -113,8 +137,7 @@ func main() {
 	if !errored {
 		DoneF("The ddp-setup finished successfully")
 	}
-	InfoF("Press ENTER to exit...")
-	fmt.Scanln()
+	exit(0)
 }
 
 func isSameGccVersion() bool {
