@@ -36,11 +36,12 @@ func main() {
 	_, hasGcc := LookupCommand("gcc")
 
 	if !hasGcc && runtime.GOOS == "windows" {
-		InfoF("gcc not found, unzipping mingw64")
+		InfoF("gcc not found, installing mingw64")
+		InfoF("unzipping mingw64.zip")
 		err := compression.DecompressFolder("mingw64.zip", "mingw64")
 		if err != nil {
 			ErrorF("Error while unzipping mingw64: %s", err)
-			ErrorF("no gcc available, aborting")
+			ErrorF("gcc not available, aborting")
 			exit(1)
 		}
 		DoneF("unzipped mingw64")
@@ -69,12 +70,13 @@ func main() {
 				if err := penv.AppendEnv("PATH", mingw64binDir); err != nil {
 					ErrorF("Error appending to PATH: %s", err)
 				}
+				DoneF("Installed mingw64")
 			}
 		} else {
 			WarnF("mingw64 was not added to the PATH, kddp will probably not work!")
 		}
 
-		DoneF("using unzipped mingw64 for gcc, ar and make")
+		DoneF("using newly installed mingw64 for gcc, ar and make")
 	} else if !hasGcc && runtime.GOOS != "windows" {
 		ErrorF("gcc not found, aborting")
 		exit(1)
@@ -135,7 +137,22 @@ func main() {
 	}
 
 	if !errored {
-		DoneF("The ddp-setup finished successfully")
+		DoneF("DDP is now installed")
+		if prompt("Do you want to delete files that are not needed anymore") {
+			InfoF("deleting mingw64.zip")
+			if err := os.Remove("mingw64.zip"); err != nil {
+				WarnF("error removing mingw64.zip: %s", err)
+			} else {
+				DoneF("removed mingw64.zip")
+			}
+			InfoF("deleting vscode-ddp.vsix")
+			if err := os.Remove("vscode-ddp.vsix"); err != nil {
+				WarnF("error removing vscode-ddp.vsix: %s", err)
+			} else {
+				DoneF("removed vscode-ddp.vsix")
+			}
+		}
+		DoneF("The ddp-setup finished successfuly, you can now delete it")
 	}
 	exit(0)
 }
