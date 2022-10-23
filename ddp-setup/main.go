@@ -93,6 +93,8 @@ func main() {
 				exit(1)
 			}
 			makeCmd = filepath.ToSlash(makeCmd)
+		} else if !hasMake && runtime.GOOS != "windows" {
+			WarnF("make not found")
 		}
 	}
 
@@ -139,11 +141,13 @@ func main() {
 	if !errored {
 		DoneF("DDP is now installed")
 		if prompt("Do you want to delete files that are not needed anymore") {
-			InfoF("deleting mingw64.zip")
-			if err := os.Remove("mingw64.zip"); err != nil {
-				WarnF("error removing mingw64.zip: %s", err)
-			} else {
-				DoneF("removed mingw64.zip")
+			if runtime.GOOS == "windows" {
+				InfoF("deleting mingw64.zip")
+				if err := os.Remove("mingw64.zip"); err != nil {
+					WarnF("error removing mingw64.zip: %s", err)
+				} else {
+					DoneF("removed mingw64.zip")
+				}
 			}
 			InfoF("deleting vscode-ddp.vsix")
 			if err := os.Remove("vscode-ddp.vsix"); err != nil {
