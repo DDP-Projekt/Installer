@@ -105,13 +105,10 @@ func main() {
 		recompileLibs()
 	}
 
-	if prompt("Do you want to install vscode-ddp (the DDP vscode extension)") {
-		hasVscode := false
-		if vscodeCmd, hasVscode = LookupCommand(vscodeCmd); hasVscode {
-			InfoF("installing vscode-ddp as vscode extension")
-			if _, err := runCmd("", vscodeCmd, "--install-extension", "vscode-ddp.vsix"); err == nil {
-				DoneF("Installed vscode-ddp")
-			}
+	if vscodeCmd, hasVscode := LookupCommand(vscodeCmd); hasVscode && prompt("Do you want to install vscode-ddp (the DDP vscode extension)") {
+		InfoF("installing vscode-ddp as vscode extension")
+		if _, err := runCmd("", vscodeCmd, "--install-extension", "vscode-ddp.vsix"); err == nil {
+			DoneF("Installed vscode-ddp")
 		}
 	}
 
