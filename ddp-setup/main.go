@@ -33,6 +33,8 @@ func main() {
 		return
 	}
 
+	installLocales()
+
 	_, hasGcc := LookupCommand("gcc")
 
 	if !hasGcc && runtime.GOOS == "windows" {
@@ -156,6 +158,17 @@ func main() {
 		DoneF("The ddp-setup finished successfuly, you can now delete it")
 	}
 	exit(0)
+}
+
+func installLocales() {
+	InfoF("installing german locales")
+	if runtime.GOOS == "linux" {
+		if _, err := runCmd("", "locale-gen", "de_DE.UTF-8"); err != nil {
+			WarnF("error installing german locale: %s", err)
+		}
+	} else if runtime.GOOS == "windows" {
+		WarnF("you are using windows, make sure you have the correct language packs installed")
+	}
 }
 
 func isSameGccVersion() bool {
