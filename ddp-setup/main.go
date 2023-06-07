@@ -64,21 +64,13 @@ func main() {
 		}
 		makeCmd = filepath.ToSlash(makeCmd)
 
-		if prompt("For kddp to work, mingw64 needs to be added to your PATH. Do you agree") {
-			if mingw64binDir, err := filepath.Abs(filepath.Join("mingw64", "bin")); err != nil {
-				WarnF("error getting absolute Path: %s", err)
-			} else {
-				InfoF("Appending %s to the PATH", mingw64binDir)
-				if err := penv.AppendEnv("PATH", mingw64binDir); err != nil {
-					ErrorF("Error appending to PATH: %s", err)
-				}
-				DoneF("Installed mingw64")
-			}
-		} else {
-			WarnF("mingw64 was not added to the PATH, kddp will probably not work!")
-		}
-
+		DoneF("Installed mingw64")
 		DoneF("using newly installed mingw64 for gcc, ar and make")
+	} else if hasGcc && runtime.GOOS == "windows" {
+		InfoF("gcc found, deleting now unused mingw64.zip")
+		if err := os.Remove("mingw64.zip"); err != nil {
+			WarnF("unable to delete mingw64.zip: %s", err)
+		}
 	} else if !hasGcc && runtime.GOOS != "windows" {
 		ErrorF("gcc not found, aborting")
 		exit(1)
@@ -120,7 +112,7 @@ func main() {
 		} else {
 			InfoF("Setting the environment variable DDPPATH to %s", exedir)
 			if err := penv.SetEnv("DDPPATH", exedir); err != nil {
-				ErrorF("Error setting DDPPATH: %s", err)
+				ErrorF("Error setting DDPPATH: %s\nConsider adding it yourself", err)
 			}
 		}
 	}
@@ -132,7 +124,7 @@ func main() {
 			binPath := filepath.Join(exedir, "bin")
 			InfoF("Appending %s to the PATH", binPath)
 			if err := penv.AppendEnv("PATH", binPath); err != nil {
-				ErrorF("Error appending to PATH: %s", err)
+				ErrorF("Error appending to PATH: %s\nConsider adding DDP/bin to PATH yourself", err)
 			}
 		}
 	}
