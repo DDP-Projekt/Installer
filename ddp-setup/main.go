@@ -164,7 +164,7 @@ func isSameGccVersion() bool {
 		return false
 	}
 	gccVersion = strings.Trim(gccVersion, "\r\n") // TODO: this
-	kddpVersionOutput, err := runCmd("", filepath.Join("bin", "kddp"), "version")
+	kddpVersionOutput, err := runCmd("", filepath.Join("bin", "kddp"), "version", "--wortreich")
 	if err != nil {
 		return false
 	}
