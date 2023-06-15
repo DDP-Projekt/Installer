@@ -1,5 +1,5 @@
 /create-ddp-release/config.json
 *.zip
 *.tar.gz
-/create-ddp-release/DDP
+/create-ddp-release/DDP*
 *.exe

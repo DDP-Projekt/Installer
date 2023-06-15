@@ -66,11 +66,6 @@ func main() {
 
 		DoneF("Installed mingw64")
 		DoneF("using newly installed mingw64 for gcc, ar and make")
-	} else if hasGcc && runtime.GOOS == "windows" {
-		InfoF("gcc found, deleting now unused mingw64.zip")
-		if err := os.Remove("mingw64.zip"); err != nil {
-			WarnF("unable to delete mingw64.zip: %s", err)
-		}
 	} else if !hasGcc && runtime.GOOS != "windows" {
 		ErrorF("gcc not found, aborting")
 		exit(1)
