@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -178,18 +177,19 @@ func isSameGccVersion() bool {
 }
 
 func recompileLibs() {
-	if runtime.GOOS == "linux" {
-		if _, err := runCmd("lib/runtime/", makeCmd); err != nil {
-			return
-		}
-		DoneF("re-compiled the runtime")
-		if _, err := runCmd("lib/stdlib/", makeCmd); err != nil {
-			return
-		}
-		DoneF("re-compiled the stdlib")
-	} else if runtime.GOOS == "windows" {
-		compileLibsWindows()
+	make_args := make([]string, 0)
+	if runtime.GOOS == "windows" {
+		make_args = append(make_args, fmt.Sprintf("CC=%s", gccCmd), fmt.Sprintf("AR=\"%s %s\"", arCmd, "rcs"))
 	}
+
+	if _, err := runCmd("lib/runtime/", makeCmd, make_args...); err != nil {
+		return
+	}
+	DoneF("re-compiled the runtime")
+	if _, err := runCmd("lib/stdlib/", makeCmd, make_args...); err != nil {
+		return
+	}
+	DoneF("re-compiled the stdlib")
 
 	InfoF("removing pre-compiled runtime")
 	if err := os.Remove("lib/libddpruntime.a"); err != nil {
@@ -210,75 +210,15 @@ func recompileLibs() {
 	}
 
 	InfoF("cleaning runtime directory")
-	if err := os.Remove("lib/runtime/libddpruntime.a"); err != nil {
-		WarnF("error while cleaning runtime directory: %s", err)
-	}
-	if err := removeObjects("lib/runtime/"); err != nil {
+	if _, err := runCmd("lib/runtime/", makeCmd, "clean"); err != nil {
 		WarnF("error while cleaning runtime directory: %s", err)
 	}
 	InfoF("cleaning stdlib directory")
-	if err := os.Remove("lib/stdlib/libddpstdlib.a"); err != nil {
-		WarnF("error while cleaning stdlib directory: %s", err)
-	}
-	if err := removeObjects("lib/stdlib/"); err != nil {
+	if _, err := runCmd("lib/stdlib/", makeCmd, "clean"); err != nil {
 		WarnF("error while cleaning stdlib directory: %s", err)
 	}
 
 	DoneF("recompiled libraries")
-}
-
-func compileLibsWindows() {
-	getFiles := func(dir, ext string) []string {
-		files := make([]string, 0)
-
-		err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-			if d.IsDir() || err != nil {
-				return nil
-			}
-			if filepath.Ext(path) == ext {
-				files = append(files, strings.TrimPrefix(filepath.ToSlash(path), dir))
-			}
-			return nil
-		})
-
-		if err != nil {
-			WarnF("error while filtering files: %s", err)
-		}
-
-		return files
-	}
-
-	sources := getFiles("lib/runtime/", ".c")
-	objects := Map(sources, func(str string) string {
-		return filepath.Base(strings.ReplaceAll(str, ".c", ".o"))
-	})
-	args := append(make([]string, 0), "-c", "-Wall", "-Wno-format", "-O2", "-I./include/")
-	args = append(args, sources...)
-	if _, err := runCmd("lib/runtime", gccCmd, args...); err != nil {
-		return
-	}
-	args = append(make([]string, 0), "cr", "libddpruntime.a")
-	args = append(args, objects...)
-	if _, err := runCmd("lib/runtime", arCmd, args...); err != nil {
-		return
-	}
-	DoneF("re-compiled the runtime")
-
-	sources = getFiles("lib/stdlib/", ".c")
-	objects = Map(sources, func(str string) string {
-		return filepath.Base(strings.ReplaceAll(str, ".c", ".o"))
-	})
-	args = append(make([]string, 0), "-c", "-Wall", "-Wno-format", "-O2", "-I./include/", "-I../runtime/include/")
-	args = append(args, sources...)
-	if _, err := runCmd("lib/stdlib", gccCmd, args...); err != nil {
-		return
-	}
-	args = append(make([]string, 0), "cr", "libddpstdlib.a")
-	args = append(args, objects...)
-	if _, err := runCmd("lib/stdlib", arCmd, args...); err != nil {
-		return
-	}
-	DoneF("re-compiled the stdlib")
 }
 
 func runCmd(dir string, name string, args ...string) (string, error) {
@@ -302,28 +242,4 @@ func LookupCommand(cmd string) (string, bool) {
 		WarnF("Unable to find %s", cmd)
 	}
 	return path, err == nil
-}
-
-func removeObjects(dir string) error {
-	return filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
-		if d.IsDir() || err != nil {
-			return nil
-		}
-
-		if filepath.Ext(path) == ".o" {
-			if err := os.Remove(path); err != nil {
-				WarnF("Error removing '%s': %s", path, err)
-			}
-		}
-
-		return nil
-	})
-}
-
-func Map[T any](s []T, mapFunc func(t T) T) []T {
-	result := make([]T, 0, len(s))
-	for _, v := range s {
-		result = append(result, mapFunc(v))
-	}
-	return result
 }
