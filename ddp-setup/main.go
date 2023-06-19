@@ -34,7 +34,7 @@ func main() {
 
 	installLocales()
 
-	_, hasGcc := LookupCommand("gcc")
+	_, hasGcc := LookupCommand(gccCmd)
 
 	if !hasGcc && runtime.GOOS == "windows" {
 		InfoF("gcc not found, installing mingw64")
@@ -71,7 +71,7 @@ func main() {
 	}
 
 	if makeCmd == "make" { // if we don't use the zipped mingw32-make
-		_, hasMake := LookupCommand("make")
+		_, hasMake := LookupCommand(makeCmd)
 
 		if !hasMake && runtime.GOOS == "windows" {
 			InfoF("make not found, looking for mingw32-make")
@@ -178,8 +178,10 @@ func isSameGccVersion() bool {
 
 func recompileLibs() {
 	make_args := make([]string, 0)
+	rmArg := ""
 	if runtime.GOOS == "windows" {
 		make_args = append(make_args, fmt.Sprintf("CC=%s", gccCmd), fmt.Sprintf("AR=\"%s %s\"", arCmd, "rcs"))
+		rmArg = "./bin/ddp-rm.exe"
 	}
 
 	if _, err := runCmd("lib/runtime/", makeCmd, make_args...); err != nil {
@@ -210,11 +212,11 @@ func recompileLibs() {
 	}
 
 	InfoF("cleaning runtime directory")
-	if _, err := runCmd("lib/runtime/", makeCmd, "clean"); err != nil {
+	if _, err := runCmd("lib/runtime/", makeCmd, "clean", rmArg); err != nil {
 		WarnF("error while cleaning runtime directory: %s", err)
 	}
 	InfoF("cleaning stdlib directory")
-	if _, err := runCmd("lib/stdlib/", makeCmd, "clean"); err != nil {
+	if _, err := runCmd("lib/stdlib/", makeCmd, "clean", rmArg); err != nil {
 		WarnF("error while cleaning stdlib directory: %s", err)
 	}
 

@@ -34,3 +34,9 @@ It should be executed from said folder:
 cd DDP-<version-info>
 ./ddp-setup
 ```
+
+## ddp-rm
+
+This program is a very simple implementation of the unix `rm` command.
+It is shipped on windows for the installer to call `make clean` if the
+runtime and stdlib had to be rebuilt

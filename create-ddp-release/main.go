@@ -99,6 +99,8 @@ func main() {
 	// build the language server into the output directory
 	runCmd(lsDir, "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 	if runtime.GOOS == "windows" {
+		// build ddp-rm
+		runCmd("../ddp-rm/", "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 		// compress mingw and put it into the output directory
 		fmt.Println("compressing mingw")
 		errPanic(compression.CompressFolder(filepath.Clean(mingwDir), filepath.Join(outDir, "mingw64"+compressExt)))
