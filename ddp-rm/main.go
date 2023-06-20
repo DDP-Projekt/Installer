@@ -10,13 +10,11 @@ import (
 	"os"
 )
 
+// always exits with code 0 to not interrupt the makefile
 func main() {
-	exitStatus := 0
 	for _, path := range os.Args[1:] {
 		if err := os.Remove(path); err != nil {
-			exitStatus = 1
-			fmt.Fprintf(os.Stderr, "%s: %s", path, err)
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 		}
 	}
-	os.Exit(exitStatus)
 }
