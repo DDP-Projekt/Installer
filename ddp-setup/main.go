@@ -19,6 +19,7 @@ var (
 	makeCmd   = "make"
 	arCmd     = "ar"
 	vscodeCmd = "code"
+	kddpCmd   = "bin/kddp"
 )
 
 func exit(code int) {
@@ -197,6 +198,16 @@ func recompileLibs() {
 	if err := os.Remove("lib/libddpruntime.a"); err != nil {
 		WarnF("error removing pre-compiled runtime: %s", err)
 	}
+	InfoF("removing pre-compiled lib/main.o lib/ddp_list_types_defs.o lib/ddp_list_types_defs.ll")
+	if err := os.Remove("lib/main.o"); err != nil {
+		WarnF("error removing pre-compiled lib/main.o: %s", err)
+	}
+	if err := os.Remove("lib/ddp_list_types_defs.o"); err != nil {
+		WarnF("error removing pre-compiled lib/ddp_list_types_defs.o: %s", err)
+	}
+	if err := os.Remove("lib/ddp_list_types_defs.ll"); err != nil {
+		WarnF("error removing pre-compiled lib/ddp_list_types_defs.ll: %s", err)
+	}
 	InfoF("removing pre-compiled stdlib")
 	if err := os.Remove("lib/libddpstdlib.a"); err != nil {
 		WarnF("error removing pre-compiled stdlib: %s", err)
@@ -205,6 +216,14 @@ func recompileLibs() {
 	InfoF("copying re-compiled runtime")
 	if err := cp.Copy("lib/runtime/libddpruntime.a", "lib/libddpruntime.a"); err != nil {
 		ErrorF("error copying re-compiled runtime: %s", err)
+	}
+	InfoF("copying re-compiled lib/main.o")
+	if err := cp.Copy("lib/runtime/source/main.o", "lib/main.o"); err != nil {
+		ErrorF("error copying re-compiled runtime: %s", err)
+	}
+	InfoF("regenerating lib/ddp_list_types_defs.ll and lib/ddp_list_types_defs.o")
+	if _, err := runCmd("", kddpCmd, "dump-list-defs", "-o", "lib/ddp_list_types_defs", "--llvm_ir", "--object"); err != nil {
+		ErrorF("error regenerating lib/ddp_list_types_defs.ll and lib/ddp_list_types_defs.o: %s", err)
 	}
 	InfoF("copying re-compiled stdlib")
 	if err := cp.Copy("lib/stdlib/libddpstdlib.a", "lib/libddpstdlib.a"); err != nil {
