@@ -20,6 +20,7 @@ var (
 	arCmd     = "ar"
 	vscodeCmd = "code"
 	kddpCmd   = "bin/kddp"
+	cwd       = "./"
 )
 
 func exit(code int) {
@@ -33,6 +34,12 @@ func main() {
 		return
 	}
 
+	cwd_, err := os.Getwd()
+	if err != nil {
+		WarnF("error getting current working directory: %s", err)
+	} else {
+		cwd = cwd_
+	}
 	installLocales()
 
 	_, hasGcc := LookupCommand(gccCmd)
@@ -181,8 +188,8 @@ func recompileLibs() {
 	make_args := make([]string, 0)
 	rmArg := ""
 	if runtime.GOOS == "windows" {
-		make_args = append(make_args, fmt.Sprintf("CC=%s", gccCmd), fmt.Sprintf("AR=\"%s %s\"", arCmd, "rcs"))
-		rmArg = "./bin/ddp-rm.exe"
+		make_args = append(make_args, fmt.Sprintf("CC=%s", gccCmd), fmt.Sprintf("AR=%s %s", arCmd, "rcs"))
+		rmArg = "RM=" + filepath.Join(cwd, "bin", "ddp-rm.exe")
 	}
 
 	if _, err := runCmd("lib/runtime/", makeCmd, make_args...); err != nil {
