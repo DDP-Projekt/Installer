@@ -10,8 +10,8 @@ import (
 var scanner = bufio.NewScanner(os.Stdin)
 
 func prompt(question string) bool {
-	fmt.Print(ColorString(question+"? [y/n]: ", Cyan))
+	fmt.Print(ColorString(question+"? [ja/nein]: ", Cyan))
 	scanner.Scan()
-	answer := scanner.Text()
-	return strings.ToLower(answer) == "y"
+	answer := strings.ToLower(scanner.Text())
+	return strings.ToLower(answer) == "ja"
 }

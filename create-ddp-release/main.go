@@ -35,7 +35,10 @@ func errPanic(err error) {
 	}
 }
 
-var compressExt = ".zip"
+var (
+	compressExt = ".zip"
+	ship_mingw  = true
+)
 
 // read the config file
 func setup_config() {
@@ -50,18 +53,8 @@ func setup_config() {
 	}
 }
 
-// remove all files created by previous invocations
-func clean_old_build() {
-	fmt.Println("deleting old releases")
-	files, err := filepath.Glob("./DDP*")
-	errPanic(err)
-	for _, file := range files {
-		errPanic(os.RemoveAll(file))
-	}
-}
-
-func get_out_dir(ddpBuildDir string) string {
-	return "DDP-" + strings.ReplaceAll(
+func gen_out_dir(ddpBuildDir string) string {
+	version_path := "DDP-" + strings.ReplaceAll(
 		strings.TrimPrefix(
 			strings.TrimRight(
 				strings.Split(
@@ -74,11 +67,22 @@ func get_out_dir(ddpBuildDir string) string {
 		" ",
 		"-",
 	)
+	if runtime.GOOS == "windows" && viper.GetString("mingw") == "" {
+		version_path += "-no-mingw"
+		ship_mingw = false
+	}
+
+	// delete version path if it exists
+	if _, err := os.Stat(version_path); !os.IsNotExist(err) {
+		fmt.Printf("deleting %s\n", version_path)
+		errPanic(os.RemoveAll(version_path))
+	}
+
+	return version_path
 }
 
 func main() {
 	setup_config()
-	clean_old_build()
 
 	// read the json file
 	compDir := filepath.Join(viper.GetString("Kompilierer"))
@@ -91,7 +95,7 @@ func main() {
 
 	// compile and copy kddp
 	runCmd(compDir, "make", "all")
-	outDir := get_out_dir(ddpBuildDir)
+	outDir := gen_out_dir(ddpBuildDir)
 	fmt.Println("copying Kompilierer/build/DDP directory")
 	errPanic(cp.Copy(ddpBuildDir, outDir))
 	// copy the extension output (.vsix file)
@@ -101,9 +105,11 @@ func main() {
 	if runtime.GOOS == "windows" {
 		// build ddp-rm
 		runCmd("../ddp-rm/", "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
-		// compress mingw and put it into the output directory
-		fmt.Println("compressing mingw")
-		errPanic(compression.CompressFolder(filepath.Clean(mingwDir), filepath.Join(outDir, "mingw64"+compressExt)))
+		if ship_mingw {
+			// compress mingw and put it into the output directory
+			fmt.Println("compressing mingw")
+			errPanic(compression.CompressFolder(filepath.Clean(mingwDir), filepath.Join(outDir, "mingw64"+compressExt)))
+		}
 	}
 	// build the installer
 	runCmd("../ddp-setup/", "go", "build", "-o", filepath.Join(cwd, outDir), ".")
