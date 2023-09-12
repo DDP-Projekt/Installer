@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"os/exec"
@@ -30,6 +31,8 @@ func exit(code int) {
 }
 
 func main() {
+	flag.BoolVar(&always_yes, "force", false, "always answer yes to prompts")
+	flag.Parse()
 	if !prompt("Welcome to the DDP Installer!\nThis setup will simply unpack some files and ask you for permission to change some environment variables and such.\nDo you want to continue") {
 		return
 	}
