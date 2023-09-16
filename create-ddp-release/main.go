@@ -38,6 +38,7 @@ func errPanic(err error) {
 var (
 	compressExt = ".zip"
 	ship_mingw  = true
+	default_env = os.Environ()
 )
 
 // read the config file
@@ -58,7 +59,7 @@ func gen_out_dir(ddpBuildDir string) string {
 		strings.TrimPrefix(
 			strings.TrimRight(
 				strings.Split(
-					runCmd(filepath.Join(ddpBuildDir, "bin"), "kddp", "version"), "\n",
+					runCmd(filepath.Join(ddpBuildDir, "bin"), "kddp", default_env, "version"), "\n",
 				)[0],
 				"\r\n",
 			),
@@ -94,17 +95,17 @@ func main() {
 	errPanic(err)
 
 	// compile and copy kddp
-	runCmd(compDir, "make", "all")
+	runCmd(compDir, "make", default_env, "all")
 	outDir := gen_out_dir(ddpBuildDir)
 	fmt.Println("copying Kompilierer/build/DDP directory")
 	errPanic(cp.Copy(ddpBuildDir, outDir))
 	// copy the extension output (.vsix file)
-	runCmd(extDir, "vsce", "package", "-o", filepath.Join(cwd, outDir, "vscode-ddp.vsix"))
+	runCmd(extDir, "vsce", default_env, "package", "-o", filepath.Join(cwd, outDir, "vscode-ddp.vsix"))
 	// build the language server into the output directory
-	runCmd(lsDir, "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
+	runCmd(lsDir, "go", default_env, "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 	if runtime.GOOS == "windows" {
 		// build ddp-rm
-		runCmd("../ddp-rm/", "go", "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
+		runCmd("../ddp-rm/", "go", default_env, "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 		if ship_mingw {
 			// compress mingw and put it into the output directory
 			fmt.Println("compressing mingw")
@@ -112,15 +113,19 @@ func main() {
 		}
 	}
 	// build the installer
-	runCmd("../ddp-setup/", "go", "build", "-o", filepath.Join(cwd, outDir), ".")
+	ddp_setup_env := make([]string, len(default_env)+1)
+	copy(ddp_setup_env, default_env)
+	ddp_setup_env = append(ddp_setup_env, "CGO_ENABLED=0")
+	runCmd("../ddp-setup/", "go", ddp_setup_env, "build", "-o", filepath.Join(cwd, outDir), ".")
 	// compress the output directory
 	fmt.Println("compressing release folder")
 	errPanic(compression.CompressFolder(filepath.Clean(outDir), filepath.Clean(outDir+compressExt)))
 }
 
-func runCmd(dir, name string, args ...string) string {
+func runCmd(dir, name string, env []string, args ...string) string {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = dir
+	cmd.Env = os.Environ()
 	fmt.Printf("Running cmd %s in dir %s\n", cmd.String(), cmd.Dir)
 	out, err := cmd.CombinedOutput()
 	if err != nil {
