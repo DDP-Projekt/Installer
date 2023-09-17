@@ -13,11 +13,12 @@ var (
 )
 
 func prompt(question string) bool {
-	if always_yes {
-		return true
-	}
 
 	fmt.Print(ColorString(question+"? [y/n]: ", Cyan))
+	if always_yes {
+		fmt.Println("y")
+		return true
+	}
 	scanner.Scan()
 	answer := strings.ToLower(scanner.Text())
 	return strings.ToLower(answer) == "y"
