@@ -145,12 +145,6 @@ func main() {
 					DoneF("removed mingw64.zip")
 				}
 			}
-			InfoF("deleting vscode-ddp.vsix")
-			if err := os.Remove("vscode-ddp.vsix"); err != nil {
-				WarnF("error removing vscode-ddp.vsix: %s", err)
-			} else {
-				DoneF("removed vscode-ddp.vsix")
-			}
 		}
 		DoneF("The ddp-setup finished successfuly, you can now delete it")
 	}

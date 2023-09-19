@@ -9,7 +9,6 @@ It consumes a config.json (create-ddp-release/config.json) file which should loo
 
 	{
 		"Kompilierer": "<Directory to the Kompilierer repo>",
-		"vscode-ddp": "<Directory to the vscode-ddp repo>",
 		"DDPLS": "<Directory to the DDPLS repo>"
 		"mingw": "<Directory to the mingw64 installation that should be shiped>"
 	}
