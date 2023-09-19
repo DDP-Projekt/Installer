@@ -106,7 +106,7 @@ func main() {
 
 	if vscodeCmd, hasVscode := LookupCommand(vscodeCmd); hasVscode && prompt("Do you want to install vscode-ddp (the DDP vscode extension)") {
 		InfoF("installing vscode-ddp as vscode extension")
-		if _, err := runCmd("", vscodeCmd, "--install-extension", "vscode-ddp.vsix"); err == nil {
+		if _, err := runCmd("", vscodeCmd, "--install-extension", "DDP-Projekt.vscode-ddp", "--force"); err == nil {
 			DoneF("Installed vscode-ddp")
 		}
 	}

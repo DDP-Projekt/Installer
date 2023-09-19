@@ -88,7 +88,6 @@ func main() {
 	// read the json file
 	compDir := filepath.Join(viper.GetString("Kompilierer"))
 	ddpBuildDir := filepath.Join(compDir, "build", "DDP")
-	extDir := viper.GetString("vscode-ddp")
 	lsDir := viper.GetString("DDPLS")
 	mingwDir := viper.GetString("mingw")
 	cwd, err := os.Getwd() // current working directory
@@ -99,8 +98,6 @@ func main() {
 	outDir := gen_out_dir(ddpBuildDir)
 	fmt.Println("copying Kompilierer/build/DDP directory")
 	errPanic(cp.Copy(ddpBuildDir, outDir))
-	// copy the extension output (.vsix file)
-	runCmd(extDir, "vsce", default_env, "package", "-o", filepath.Join(cwd, outDir, "vscode-ddp.vsix"))
 	// build the language server into the output directory
 	runCmd(lsDir, "go", default_env, "build", "-o", filepath.Join(cwd, outDir, "bin"), ".")
 	if runtime.GOOS == "windows" {
