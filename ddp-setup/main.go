@@ -237,11 +237,16 @@ func recompileLibs() {
 	}
 
 	InfoF("cleaning runtime directory")
-	if _, err := runCmd("lib/runtime/", makeCmd, "clean", rmArg); err != nil {
+	clean_args := make([]string, 0, 2)
+	clean_args = append(clean_args, "clean")
+	if rmArg != "" {
+		clean_args = append(clean_args, rmArg)
+	}
+	if _, err := runCmd("lib/runtime/", makeCmd, clean_args...); err != nil {
 		WarnF("error while cleaning runtime directory: %s", err)
 	}
 	InfoF("cleaning stdlib directory")
-	if _, err := runCmd("lib/stdlib/", makeCmd, "clean", rmArg); err != nil {
+	if _, err := runCmd("lib/stdlib/", makeCmd, clean_args...); err != nil {
 		WarnF("error while cleaning stdlib directory: %s", err)
 	}
 
