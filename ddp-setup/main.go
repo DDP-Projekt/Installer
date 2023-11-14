@@ -26,7 +26,9 @@ var (
 
 func exit(code int) {
 	InfoF("Press ENTER to exit...")
-	fmt.Scanln()
+	if !always_yes {
+		fmt.Scanln()
+	}
 	os.Exit(code)
 }
 
